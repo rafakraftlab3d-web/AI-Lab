@@ -85,6 +85,11 @@
             background: #f0b744;
         }
 
+        #flash {
+            background: #7c5cff;
+            color: white;
+        }
+
         #parar {
             background: #e05a5a;
         }
@@ -115,6 +120,7 @@
     <div class="botoes">
         <button id="iniciar">Iniciar câmera</button>
         <button id="trocar" disabled>Trocar câmera</button>
+        <button id="flash" disabled>Ativar flash</button>
         <button id="parar" disabled>Parar</button>
     </div>
 
@@ -126,10 +132,13 @@
         const statusTexto = document.getElementById("status");
         const botaoIniciar = document.getElementById("iniciar");
         const botaoTrocar = document.getElementById("trocar");
+        const botaoFlash = document.getElementById("flash");
         const botaoParar = document.getElementById("parar");
 
         let stream = null;
+        let videoTrack = null;
         let cameraSelecionada = "environment";
+        let flashLigado = false;
         let animacao = null;
 
         async function iniciarCamera() {
@@ -153,8 +162,11 @@
             };
 
             try {
-                stream = await navigator.mediaDevices.getUserMedia(configuracao);
+                stream = await navigator.mediaDevices.getUserMedia(
+                    configuracao
+                );
 
+                videoTrack = stream.getVideoTracks()[0];
                 video.srcObject = stream;
 
                 await video.play();
@@ -166,6 +178,8 @@
                 botaoTrocar.disabled = false;
                 botaoParar.disabled = false;
 
+                configurarBotaoFlash();
+
                 statusTexto.textContent =
                     `Câmera ativa — ${video.videoWidth} × ${video.videoHeight}`;
 
@@ -175,6 +189,84 @@
 
                 statusTexto.textContent =
                     "Erro ao abrir a câmera. Verifique a permissão do navegador.";
+            }
+        }
+
+        function configurarBotaoFlash() {
+            flashLigado = false;
+            botaoFlash.textContent = "Ativar flash";
+
+            if (
+                !videoTrack ||
+                typeof videoTrack.getCapabilities !== "function"
+            ) {
+                botaoFlash.disabled = true;
+                botaoFlash.textContent = "Flash indisponível";
+                return;
+            }
+
+            const capacidades = videoTrack.getCapabilities();
+
+            if ("torch" in capacidades && capacidades.torch === true) {
+                botaoFlash.disabled = false;
+            } else {
+                botaoFlash.disabled = true;
+                botaoFlash.textContent = "Flash indisponível";
+            }
+        }
+
+        async function alternarFlash() {
+            if (!videoTrack) {
+                return;
+            }
+
+            if (
+                typeof videoTrack.getCapabilities !== "function" ||
+                typeof videoTrack.applyConstraints !== "function"
+            ) {
+                statusTexto.textContent =
+                    "Este navegador não oferece controle do flash.";
+                return;
+            }
+
+            const capacidades = videoTrack.getCapabilities();
+
+            if (!("torch" in capacidades) || capacidades.torch !== true) {
+                statusTexto.textContent =
+                    "Flash indisponível nesta câmera ou navegador.";
+                return;
+            }
+
+            try {
+                const novoEstado = !flashLigado;
+
+                await videoTrack.applyConstraints({
+                    advanced: [
+                        {
+                            torch: novoEstado
+                        }
+                    ]
+                });
+
+                flashLigado = novoEstado;
+
+                botaoFlash.textContent =
+                    flashLigado
+                        ? "Desativar flash"
+                        : "Ativar flash";
+
+                statusTexto.textContent =
+                    flashLigado
+                        ? "Flash ligado."
+                        : "Flash desligado.";
+            } catch (erro) {
+                console.error(erro);
+
+                flashLigado = false;
+                botaoFlash.textContent = "Ativar flash";
+
+                statusTexto.textContent =
+                    "Não foi possível controlar o flash neste aparelho.";
             }
         }
 
@@ -220,8 +312,11 @@
 
             if (stream !== null) {
                 stream.getTracks().forEach(track => track.stop());
-                stream = null;
             }
+
+            stream = null;
+            videoTrack = null;
+            flashLigado = false;
 
             video.srcObject = null;
 
@@ -229,7 +324,10 @@
 
             botaoIniciar.disabled = false;
             botaoTrocar.disabled = true;
+            botaoFlash.disabled = true;
             botaoParar.disabled = true;
+
+            botaoFlash.textContent = "Ativar flash";
 
             if (atualizarStatus) {
                 statusTexto.textContent = "Câmera desligada.";
@@ -245,9 +343,25 @@
             await iniciarCamera();
         }
 
-        botaoIniciar.addEventListener("click", iniciarCamera);
-        botaoTrocar.addEventListener("click", trocarCamera);
-        botaoParar.addEventListener("click", () => pararCamera(true));
+        botaoIniciar.addEventListener(
+            "click",
+            iniciarCamera
+        );
+
+        botaoTrocar.addEventListener(
+            "click",
+            trocarCamera
+        );
+
+        botaoFlash.addEventListener(
+            "click",
+            alternarFlash
+        );
+
+        botaoParar.addEventListener(
+            "click",
+            () => pararCamera(true)
+        );
     </script>
 </body>
 </html>
