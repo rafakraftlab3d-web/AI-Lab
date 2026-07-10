@@ -13,7 +13,7 @@
         content="no-cache, no-store, must-revalidate"
     >
 
-    <title>AI-Lab Mobile V3</title>
+    <title>AI-Lab Mobile V4</title>
 
     <style>
         * {
@@ -27,22 +27,27 @@
         body {
             margin: 0;
             min-height: 100vh;
+
             padding:
                 max(16px, env(safe-area-inset-top))
                 14px
-                max(28px, env(safe-area-inset-bottom));
+                max(30px, env(safe-area-inset-bottom));
 
             background: #101114;
-            color: #ffffff;
-            font-family: Arial, Helvetica, sans-serif;
+            color: white;
+
+            font-family:
+                Arial,
+                Helvetica,
+                sans-serif;
         }
 
         .app {
-            width: min(100%, 850px);
+            width: min(100%, 900px);
             margin: 0 auto;
         }
 
-        .cabecalho {
+        header {
             text-align: center;
             margin-bottom: 12px;
         }
@@ -54,18 +59,25 @@
 
         .versao {
             display: inline-block;
+
             padding: 5px 10px;
+
             border-radius: 999px;
+
             background: #29303b;
             color: #76c8ff;
+
             font-size: 12px;
             font-weight: bold;
         }
 
         #status {
             min-height: 44px;
+
             margin: 12px 0;
+
             color: #d8d8d8;
+
             font-size: 15px;
             line-height: 1.4;
             text-align: center;
@@ -73,56 +85,75 @@
 
         .camera-box {
             position: relative;
+
             width: 100%;
+
             overflow: hidden;
+
             border: 2px solid #454950;
             border-radius: 16px;
-            background: #000000;
+
+            background: black;
         }
 
         video {
             display: block;
+
             width: 100%;
             height: auto;
-            background: #000000;
+
+            background: black;
+        }
+
+        /*
+         * Apenas a imagem do vídeo será espelhada.
+         * O canvas ficará normal para os textos não inverterem.
+         */
+        video.espelhado {
+            transform: scaleX(-1);
         }
 
         canvas {
             position: absolute;
             inset: 0;
+
             display: block;
+
             width: 100%;
             height: 100%;
-            pointer-events: none;
-        }
 
-        /*
-         * Espelha vídeo e desenhos simultaneamente.
-         * Usado apenas na câmera frontal.
-         */
-        .espelhado {
-            transform: scaleX(-1);
+            pointer-events: none;
         }
 
         .informacoes {
             display: grid;
-            grid-template-columns: repeat(2, minmax(0, 1fr));
+
+            grid-template-columns:
+                repeat(2, minmax(0, 1fr));
+
             gap: 8px;
+
             margin-top: 12px;
         }
 
         .cartao {
             padding: 11px 8px;
+
             border: 1px solid #32363e;
             border-radius: 11px;
+
             background: #191c21;
+
             text-align: center;
         }
 
         .cartao strong {
             display: block;
+
             margin-bottom: 5px;
+
             color: #8ae99f;
+
             font-size: 12px;
         }
 
@@ -133,20 +164,26 @@
 
         .botoes {
             display: flex;
+
             justify-content: center;
+
             gap: 10px;
             flex-wrap: wrap;
+
             margin-top: 16px;
         }
 
         button {
             min-width: 138px;
+
             padding: 13px 15px;
+
             border: none;
             border-radius: 10px;
-            color: #101114;
+
             font-size: 15px;
             font-weight: bold;
+
             cursor: pointer;
             touch-action: manipulation;
         }
@@ -158,10 +195,12 @@
 
         #iniciar {
             background: #39cc72;
+            color: #101114;
         }
 
         #trocar {
             background: #f0b744;
+            color: #101114;
         }
 
         #flash {
@@ -169,8 +208,13 @@
             color: white;
         }
 
-        #detectar {
+        #modo {
             background: #49a5ff;
+            color: white;
+        }
+
+        #detectar {
+            background: #22b8a7;
             color: white;
         }
 
@@ -179,35 +223,53 @@
             color: white;
         }
 
-        .rodape {
+        .legenda {
             margin-top: 14px;
+
             color: #aeb3bc;
+
             font-size: 13px;
-            line-height: 1.45;
+            line-height: 1.5;
             text-align: center;
+        }
+
+        .legenda-face {
+            color: #35ff72;
+            font-weight: bold;
+        }
+
+        .legenda-objeto {
+            color: #00c8ff;
+            font-weight: bold;
         }
 
         @media (min-width: 700px) {
             .informacoes {
-                grid-template-columns: repeat(4, minmax(0, 1fr));
+                grid-template-columns:
+                    repeat(4, minmax(0, 1fr));
             }
         }
     </style>
 </head>
 
 <body>
+
     <main class="app">
 
-        <header class="cabecalho">
+        <header>
             <h1>AI-Lab Mobile</h1>
-            <span class="versao">VERSÃO 3 — DETECÇÃO FACIAL</span>
+
+            <span class="versao">
+                VERSÃO 4 — ROSTOS E OBJETOS
+            </span>
         </header>
 
         <p id="status">
-            Preparando o sistema de visão computacional...
+            Preparando os modelos de visão computacional...
         </p>
 
         <div class="camera-box">
+
             <video
                 id="video"
                 autoplay
@@ -216,6 +278,7 @@
             ></video>
 
             <canvas id="overlay"></canvas>
+
         </div>
 
         <section class="informacoes">
@@ -236,8 +299,8 @@
             </div>
 
             <div class="cartao">
-                <strong>CONFIANÇA</strong>
-                <span id="infoConfianca">—</span>
+                <strong>OBJETOS</strong>
+                <span id="infoObjetos">0</span>
             </div>
 
         </section>
@@ -256,6 +319,10 @@
                 Ativar flash
             </button>
 
+            <button id="modo" disabled>
+                Modo: ambos
+            </button>
+
             <button id="detectar" disabled>
                 Detecção: ON
             </button>
@@ -266,9 +333,14 @@
 
         </div>
 
-        <p class="rodape">
-            O retângulo verde indica o rosto detectado.
-            Os pontos amarelos representam referências faciais.
+        <p class="legenda">
+            <span class="legenda-face">Verde:</span>
+            rosto detectado.
+
+            <br>
+
+            <span class="legenda-objeto">Azul:</span>
+            objeto detectado.
         </p>
 
     </main>
@@ -277,8 +349,14 @@
 
         import {
             FaceDetector,
+            ObjectDetector,
             FilesetResolver
         } from "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@latest/vision_bundle.mjs";
+
+
+        /*
+         * ELEMENTOS DA INTERFACE
+         */
 
         const video =
             document.getElementById("video");
@@ -288,6 +366,7 @@
 
         const contexto =
             canvas.getContext("2d");
+
 
         const statusTexto =
             document.getElementById("status");
@@ -301,8 +380,9 @@
         const infoRostos =
             document.getElementById("infoRostos");
 
-        const infoConfianca =
-            document.getElementById("infoConfianca");
+        const infoObjetos =
+            document.getElementById("infoObjetos");
+
 
         const botaoIniciar =
             document.getElementById("iniciar");
@@ -313,42 +393,127 @@
         const botaoFlash =
             document.getElementById("flash");
 
+        const botaoModo =
+            document.getElementById("modo");
+
         const botaoDetectar =
             document.getElementById("detectar");
 
         const botaoParar =
             document.getElementById("parar");
 
+
+        /*
+         * ESTADO DO SISTEMA
+         */
+
         let detectorFacial = null;
+        let detectorObjetos = null;
 
         let stream = null;
         let faixaVideo = null;
 
-        let cameraSelecionada = "environment";
+        let cameraSelecionada =
+            "environment";
 
         let flashLigado = false;
         let deteccaoAtiva = true;
 
+        /*
+         * Modos:
+         * ambos
+         * rosto
+         * objetos
+         */
+        let modoDeteccao = "ambos";
+
         let animacaoId = null;
+
         let ultimoTempoVideo = -1;
         let ultimaAnalise = 0;
 
-        const INTERVALO_ANALISE = 80;
+        let ultimosRostos = [];
+        let ultimosObjetos = [];
 
-        async function carregarDetector() {
+        /*
+         * Rodar os dois modelos em cada frame seria pesado.
+         * Aproximadamente 6 a 7 análises por segundo.
+         */
+        const INTERVALO_ANALISE_MS = 150;
+
+
+        /*
+         * Tradução de algumas categorias comuns.
+         * Categorias sem tradução continuam em inglês.
+         */
+
+        const traducoes = {
+            person: "pessoa",
+            bicycle: "bicicleta",
+            car: "carro",
+            motorcycle: "motocicleta",
+            airplane: "avião",
+            bus: "ônibus",
+            train: "trem",
+            truck: "caminhão",
+            boat: "barco",
+
+            bottle: "garrafa",
+            cup: "copo",
+            fork: "garfo",
+            knife: "faca",
+            spoon: "colher",
+            bowl: "tigela",
+
+            chair: "cadeira",
+            couch: "sofá",
+            bed: "cama",
+            dining_table: "mesa",
+
+            cell_phone: "celular",
+            laptop: "notebook",
+            mouse: "mouse",
+            keyboard: "teclado",
+            remote: "controle remoto",
+
+            book: "livro",
+            clock: "relógio",
+            scissors: "tesoura",
+            toothbrush: "escova de dentes",
+
+            dog: "cachorro",
+            cat: "gato",
+            bird: "pássaro",
+
+            backpack: "mochila",
+            handbag: "bolsa",
+            suitcase: "mala",
+
+            tv: "televisão",
+            microwave: "micro-ondas",
+            refrigerator: "geladeira"
+        };
+
+
+        /*
+         * CARREGAMENTO DOS MODELOS
+         */
+
+        async function carregarModelos() {
 
             try {
 
                 statusTexto.textContent =
-                    "Baixando biblioteca de visão computacional...";
+                    "Carregando biblioteca do MediaPipe...";
 
                 const arquivosVision =
                     await FilesetResolver.forVisionTasks(
                         "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@latest/wasm"
                     );
 
+
                 statusTexto.textContent =
-                    "Baixando modelo de detecção facial...";
+                    "Carregando detector facial...";
 
                 detectorFacial =
                     await FaceDetector.createFromOptions(
@@ -367,23 +532,50 @@
                         }
                     );
 
+
                 statusTexto.textContent =
-                    "Detector facial carregado. Pressione “Iniciar câmera”.";
+                    "Carregando detector de objetos...";
+
+                detectorObjetos =
+                    await ObjectDetector.createFromOptions(
+                        arquivosVision,
+                        {
+                            baseOptions: {
+                                modelAssetPath:
+                                    "https://storage.googleapis.com/mediapipe-tasks/object_detector/efficientdet_lite0_uint8.tflite"
+                            },
+
+                            runningMode: "VIDEO",
+
+                            scoreThreshold: 0.35,
+
+                            maxResults: 8
+                        }
+                    );
+
+
+                statusTexto.textContent =
+                    "Modelos carregados. Pressione “Iniciar câmera”.";
 
                 botaoIniciar.disabled = false;
 
             } catch (erro) {
 
                 console.error(
-                    "Erro ao carregar MediaPipe:",
+                    "Erro ao carregar modelos:",
                     erro
                 );
 
                 statusTexto.textContent =
-                    "Falha ao carregar o detector facial. Recarregue a página.";
+                    "Falha ao carregar os modelos. Atualize a página.";
 
             }
         }
+
+
+        /*
+         * CÂMERA
+         */
 
         async function iniciarCamera() {
 
@@ -441,24 +633,26 @@
                     `${video.videoWidth} × ${video.videoHeight}`;
 
                 infoRostos.textContent = "0";
-                infoConfianca.textContent = "—";
+                infoObjetos.textContent = "0";
 
                 botaoIniciar.disabled = true;
                 botaoTrocar.disabled = false;
+                botaoModo.disabled = false;
                 botaoDetectar.disabled = false;
                 botaoParar.disabled = false;
 
                 configurarFlash();
 
-                statusTexto.textContent =
-                    deteccaoAtiva
-                        ? "Câmera ativa. Procurando rostos..."
-                        : "Câmera ativa. Detecção pausada.";
-
                 ultimoTempoVideo = -1;
                 ultimaAnalise = 0;
 
-                executarAnalise();
+                ultimosRostos = [];
+                ultimosObjetos = [];
+
+                statusTexto.textContent =
+                    "Câmera ativa. Analisando a imagem...";
+
+                executarLoop();
 
             } catch (erro) {
 
@@ -468,28 +662,44 @@
                 );
 
                 statusTexto.textContent =
-                    "Não foi possível abrir a câmera. Verifique a permissão do Safari.";
+                    "Não foi possível abrir a câmera.";
 
                 botaoIniciar.disabled = false;
 
             }
         }
 
+
+        /*
+         * ESPELHAMENTO CORRETO
+         */
+
         function configurarEspelhamento() {
 
-            const usarEspelho =
+            const frontal =
                 cameraSelecionada === "user";
 
+            /*
+             * Apenas o vídeo é espelhado.
+             */
             video.classList.toggle(
                 "espelhado",
-                usarEspelho
+                frontal
             );
 
-            canvas.classList.toggle(
-                "espelhado",
-                usarEspelho
+            /*
+             * O canvas não é espelhado.
+             * As coordenadas são corrigidas matematicamente.
+             */
+            canvas.classList.remove(
+                "espelhado"
             );
         }
+
+
+        /*
+         * FLASH
+         */
 
         function configurarFlash() {
 
@@ -517,9 +727,7 @@
             const capacidades =
                 faixaVideo.getCapabilities();
 
-            if (
-                capacidades.torch === true
-            ) {
+            if (capacidades.torch === true) {
 
                 botaoFlash.disabled = false;
 
@@ -531,6 +739,7 @@
                     "Flash indisponível";
             }
         }
+
 
         async function alternarFlash() {
 
@@ -567,7 +776,7 @@
             } catch (erro) {
 
                 console.error(
-                    "Erro no flash:",
+                    "Erro ao controlar flash:",
                     erro
                 );
 
@@ -578,11 +787,15 @@
 
                 statusTexto.textContent =
                     "Não foi possível controlar o flash.";
-
             }
         }
 
-        function executarAnalise(
+
+        /*
+         * LOOP PRINCIPAL
+         */
+
+        function executarLoop(
             tempoAtual = performance.now()
         ) {
 
@@ -593,124 +806,240 @@
 
                 animacaoId =
                     requestAnimationFrame(
-                        executarAnalise
+                        executarLoop
                     );
 
                 return;
             }
 
-            limparCanvas();
-
             if (
                 deteccaoAtiva &&
-                detectorFacial &&
                 video.currentTime !== ultimoTempoVideo &&
-                tempoAtual - ultimaAnalise >= INTERVALO_ANALISE
+                tempoAtual - ultimaAnalise >= INTERVALO_ANALISE_MS
             ) {
 
-                try {
+                executarDeteccoes(
+                    tempoAtual
+                );
 
-                    const resultado =
+                ultimoTempoVideo =
+                    video.currentTime;
+
+                ultimaAnalise =
+                    tempoAtual;
+            }
+
+            desenharResultados();
+
+            animacaoId =
+                requestAnimationFrame(
+                    executarLoop
+                );
+        }
+
+
+        /*
+         * EXECUÇÃO DOS MODELOS
+         */
+
+        function executarDeteccoes(
+            tempoAtual
+        ) {
+
+            try {
+
+                if (
+                    modoDeteccao === "ambos" ||
+                    modoDeteccao === "rosto"
+                ) {
+
+                    const resultadoRostos =
                         detectorFacial.detectForVideo(
                             video,
                             tempoAtual
                         );
 
-                    desenharResultado(
-                        resultado.detections || []
-                    );
+                    ultimosRostos =
+                        resultadoRostos.detections || [];
 
-                    ultimoTempoVideo =
-                        video.currentTime;
+                } else {
 
-                    ultimaAnalise =
-                        tempoAtual;
-
-                } catch (erro) {
-
-                    console.error(
-                        "Erro na detecção:",
-                        erro
-                    );
-
-                    statusTexto.textContent =
-                        `Erro durante a detecção: ${erro.message}`;
-
+                    ultimosRostos = [];
                 }
 
-            } else if (!deteccaoAtiva) {
 
-                desenharMensagem(
-                    "Detecção pausada"
+                if (
+                    modoDeteccao === "ambos" ||
+                    modoDeteccao === "objetos"
+                ) {
+
+                    const resultadoObjetos =
+                        detectorObjetos.detectForVideo(
+                            video,
+                            tempoAtual
+                        );
+
+                    ultimosObjetos =
+                        resultadoObjetos.detections || [];
+
+                } else {
+
+                    ultimosObjetos = [];
+                }
+
+
+                infoRostos.textContent =
+                    String(ultimosRostos.length);
+
+                infoObjetos.textContent =
+                    String(ultimosObjetos.length);
+
+
+                const total =
+                    ultimosRostos.length +
+                    ultimosObjetos.length;
+
+                if (total === 0) {
+
+                    statusTexto.textContent =
+                        "Nenhum rosto ou objeto conhecido detectado.";
+
+                } else {
+
+                    statusTexto.textContent =
+                        `${ultimosRostos.length} rosto(s) e ` +
+                        `${ultimosObjetos.length} objeto(s) detectado(s).`;
+                }
+
+            } catch (erro) {
+
+                console.error(
+                    "Erro durante a detecção:",
+                    erro
                 );
+
+                statusTexto.textContent =
+                    `Erro de detecção: ${erro.message}`;
             }
-
-            animacaoId =
-                requestAnimationFrame(
-                    executarAnalise
-                );
         }
 
-        function desenharResultado(
-            deteccoes
-        ) {
 
-            infoRostos.textContent =
-                String(deteccoes.length);
+        /*
+         * DESENHO DOS RESULTADOS
+         */
 
-            if (deteccoes.length === 0) {
+        function desenharResultados() {
 
-                infoConfianca.textContent = "—";
+            limparCanvas();
 
-                desenharMensagem(
-                    "Nenhum rosto detectado"
+            if (!deteccaoAtiva) {
+
+                desenharMensagemCentral(
+                    "Detecção pausada"
                 );
 
                 return;
             }
 
-            let maiorConfianca = 0;
-
-            for (
-                const deteccao of deteccoes
+            if (
+                ultimosRostos.length === 0 &&
+                ultimosObjetos.length === 0
             ) {
 
-                const confianca =
-                    deteccao.categories?.[0]?.score || 0;
-
-                maiorConfianca =
-                    Math.max(
-                        maiorConfianca,
-                        confianca
-                    );
-
-                desenharCaixa(
-                    deteccao.boundingBox,
-                    confianca
-                );
-
-                desenharPontos(
-                    deteccao.keypoints || []
+                desenharMensagemCentral(
+                    "Procurando..."
                 );
             }
 
-            infoConfianca.textContent =
-                `${(maiorConfianca * 100).toFixed(1)}%`;
 
-            statusTexto.textContent =
-                deteccoes.length === 1
-                    ? "1 rosto detectado."
-                    : `${deteccoes.length} rostos detectados.`;
+            for (
+                const rosto of ultimosRostos
+            ) {
+
+                desenharRosto(rosto);
+            }
+
+
+            for (
+                const objeto of ultimosObjetos
+            ) {
+
+                desenharObjeto(objeto);
+            }
         }
 
-        function desenharCaixa(
-            caixa,
-            confianca
+
+        /*
+         * CORREÇÃO DAS COORDENADAS ESPELHADAS
+         */
+
+        function corrigirXCaixa(
+            x,
+            largura
         ) {
+
+            if (
+                cameraSelecionada === "user"
+            ) {
+
+                return (
+                    canvas.width -
+                    x -
+                    largura
+                );
+            }
+
+            return x;
+        }
+
+
+        function corrigirXPonto(
+            xNormalizado
+        ) {
+
+            if (
+                cameraSelecionada === "user"
+            ) {
+
+                return (
+                    1 - xNormalizado
+                ) * canvas.width;
+            }
+
+            return (
+                xNormalizado *
+                canvas.width
+            );
+        }
+
+
+        /*
+         * ROSTOS
+         */
+
+        function desenharRosto(
+            deteccao
+        ) {
+
+            const caixa =
+                deteccao.boundingBox;
 
             if (!caixa) {
                 return;
             }
+
+            const confianca =
+                deteccao.categories?.[0]?.score || 0;
+
+            const x =
+                corrigirXCaixa(
+                    caixa.originX,
+                    caixa.width
+                );
+
+            const y =
+                caixa.originY;
+
 
             contexto.strokeStyle =
                 "#35ff72";
@@ -718,68 +1047,38 @@
             contexto.lineWidth = 5;
 
             contexto.strokeRect(
-                caixa.originX,
-                caixa.originY,
+                x,
+                y,
                 caixa.width,
                 caixa.height
             );
 
-            const texto =
-                `Rosto ${(confianca * 100).toFixed(1)}%`;
 
-            contexto.font =
-                "bold 25px Arial";
-
-            const larguraTexto =
-                contexto.measureText(texto).width;
-
-            const alturaEtiqueta = 38;
-
-            const posicaoY =
-                Math.max(
-                    alturaEtiqueta,
-                    caixa.originY
-                );
-
-            contexto.fillStyle =
-                "rgba(0, 0, 0, 0.72)";
-
-            contexto.fillRect(
-                caixa.originX,
-                posicaoY - alturaEtiqueta,
-                larguraTexto + 18,
-                alturaEtiqueta
+            desenharEtiqueta(
+                x,
+                y,
+                `Rosto ${(confianca * 100).toFixed(1)}%`,
+                "#35ff72"
             );
 
-            contexto.fillStyle =
-                "#35ff72";
-
-            contexto.fillText(
-                texto,
-                caixa.originX + 8,
-                posicaoY - 10
-            );
-        }
-
-        function desenharPontos(
-            pontos
-        ) {
 
             for (
-                const ponto of pontos
+                const ponto of deteccao.keypoints || []
             ) {
 
-                const x =
-                    ponto.x * canvas.width;
+                const pontoX =
+                    corrigirXPonto(
+                        ponto.x
+                    );
 
-                const y =
+                const pontoY =
                     ponto.y * canvas.height;
 
                 contexto.beginPath();
 
                 contexto.arc(
-                    x,
-                    y,
+                    pontoX,
+                    pontoY,
                     7,
                     0,
                     Math.PI * 2
@@ -799,7 +1098,147 @@
             }
         }
 
-        function desenharMensagem(
+
+        /*
+         * OBJETOS
+         */
+
+        function desenharObjeto(
+            deteccao
+        ) {
+
+            const caixa =
+                deteccao.boundingBox;
+
+            if (!caixa) {
+                return;
+            }
+
+            const categoria =
+                deteccao.categories?.[0];
+
+            if (!categoria) {
+                return;
+            }
+
+            const nomeOriginal =
+                categoria.categoryName ||
+                categoria.displayName ||
+                "objeto";
+
+            const nomeTraduzido =
+                traducoes[nomeOriginal] ||
+                nomeOriginal;
+
+            const confianca =
+                categoria.score || 0;
+
+            const x =
+                corrigirXCaixa(
+                    caixa.originX,
+                    caixa.width
+                );
+
+            const y =
+                caixa.originY;
+
+
+            contexto.strokeStyle =
+                "#00c8ff";
+
+            contexto.lineWidth = 5;
+
+            contexto.strokeRect(
+                x,
+                y,
+                caixa.width,
+                caixa.height
+            );
+
+
+            desenharEtiqueta(
+                x,
+                y,
+                `${nomeTraduzido} ${(confianca * 100).toFixed(1)}%`,
+                "#00c8ff"
+            );
+        }
+
+
+        /*
+         * ETIQUETAS
+         */
+
+        function desenharEtiqueta(
+            x,
+            y,
+            texto,
+            cor
+        ) {
+
+            contexto.font =
+                "bold 25px Arial";
+
+            const larguraTexto =
+                contexto.measureText(
+                    texto
+                ).width;
+
+            const alturaEtiqueta = 39;
+
+            let etiquetaX = x;
+
+            /*
+             * Impede a etiqueta de sair pela direita.
+             */
+            if (
+                etiquetaX +
+                larguraTexto +
+                20 >
+                canvas.width
+            ) {
+
+                etiquetaX =
+                    canvas.width -
+                    larguraTexto -
+                    20;
+            }
+
+            etiquetaX =
+                Math.max(
+                    0,
+                    etiquetaX
+                );
+
+            const etiquetaY =
+                Math.max(
+                    alturaEtiqueta,
+                    y
+                );
+
+
+            contexto.fillStyle =
+                "rgba(0, 0, 0, 0.78)";
+
+            contexto.fillRect(
+                etiquetaX,
+                etiquetaY - alturaEtiqueta,
+                larguraTexto + 18,
+                alturaEtiqueta
+            );
+
+
+            contexto.fillStyle = cor;
+
+            contexto.fillText(
+                texto,
+                etiquetaX + 8,
+                etiquetaY - 10
+            );
+        }
+
+
+        function desenharMensagemCentral(
             texto
         ) {
 
@@ -807,12 +1246,17 @@
                 "bold 23px Arial";
 
             const larguraTexto =
-                contexto.measureText(texto).width;
+                contexto.measureText(
+                    texto
+                ).width;
 
             const x =
                 Math.max(
                     12,
-                    (canvas.width - larguraTexto) / 2
+                    (
+                        canvas.width -
+                        larguraTexto
+                    ) / 2
                 );
 
             contexto.fillStyle =
@@ -826,7 +1270,7 @@
             );
 
             contexto.fillStyle =
-                "#ffffff";
+                "white";
 
             contexto.fillText(
                 texto,
@@ -834,6 +1278,7 @@
                 47
             );
         }
+
 
         function limparCanvas() {
 
@@ -844,6 +1289,63 @@
                 canvas.height
             );
         }
+
+
+        /*
+         * CONTROLES
+         */
+
+        function alternarModo() {
+
+            if (
+                modoDeteccao === "ambos"
+            ) {
+
+                modoDeteccao = "rosto";
+
+            } else if (
+                modoDeteccao === "rosto"
+            ) {
+
+                modoDeteccao = "objetos";
+
+            } else {
+
+                modoDeteccao = "ambos";
+            }
+
+
+            if (
+                modoDeteccao === "ambos"
+            ) {
+
+                botaoModo.textContent =
+                    "Modo: ambos";
+
+            } else if (
+                modoDeteccao === "rosto"
+            ) {
+
+                botaoModo.textContent =
+                    "Modo: rosto";
+
+            } else {
+
+                botaoModo.textContent =
+                    "Modo: objetos";
+            }
+
+
+            ultimosRostos = [];
+            ultimosObjetos = [];
+
+            infoRostos.textContent = "0";
+            infoObjetos.textContent = "0";
+
+            statusTexto.textContent =
+                `Modo alterado para: ${modoDeteccao}.`;
+        }
+
 
         function alternarDeteccao() {
 
@@ -857,19 +1359,22 @@
 
             if (!deteccaoAtiva) {
 
-                infoRostos.textContent = "0";
+                ultimosRostos = [];
+                ultimosObjetos = [];
 
-                infoConfianca.textContent = "—";
+                infoRostos.textContent = "0";
+                infoObjetos.textContent = "0";
 
                 statusTexto.textContent =
-                    "Detecção facial pausada.";
+                    "Detecção pausada.";
 
             } else {
 
                 statusTexto.textContent =
-                    "Detecção facial ativada.";
+                    "Detecção ativada.";
             }
         }
+
 
         async function trocarCamera() {
 
@@ -881,11 +1386,14 @@
             await iniciarCamera();
         }
 
+
         function pararCamera(
             atualizarStatus = true
         ) {
 
-            if (animacaoId !== null) {
+            if (
+                animacaoId !== null
+            ) {
 
                 cancelAnimationFrame(
                     animacaoId
@@ -894,7 +1402,10 @@
                 animacaoId = null;
             }
 
-            if (stream !== null) {
+
+            if (
+                stream !== null
+            ) {
 
                 stream
                     .getTracks()
@@ -903,8 +1414,10 @@
                     );
             }
 
+
             stream = null;
             faixaVideo = null;
+
             flashLigado = false;
 
             video.srcObject = null;
@@ -913,9 +1426,8 @@
                 "espelhado"
             );
 
-            canvas.classList.remove(
-                "espelhado"
-            );
+            ultimosRostos = [];
+            ultimosObjetos = [];
 
             limparCanvas();
 
@@ -928,19 +1440,23 @@
             infoRostos.textContent =
                 "0";
 
-            infoConfianca.textContent =
-                "—";
+            infoObjetos.textContent =
+                "0";
+
 
             botaoIniciar.disabled =
-                detectorFacial === null;
+                detectorFacial === null ||
+                detectorObjetos === null;
 
             botaoTrocar.disabled = true;
             botaoFlash.disabled = true;
+            botaoModo.disabled = true;
             botaoDetectar.disabled = true;
             botaoParar.disabled = true;
 
             botaoFlash.textContent =
                 "Ativar flash";
+
 
             if (atualizarStatus) {
 
@@ -948,6 +1464,11 @@
                     "Câmera desligada.";
             }
         }
+
+
+        /*
+         * EVENTOS
+         */
 
         botaoIniciar.addEventListener(
             "click",
@@ -964,6 +1485,11 @@
             alternarFlash
         );
 
+        botaoModo.addEventListener(
+            "click",
+            alternarModo
+        );
+
         botaoDetectar.addEventListener(
             "click",
             alternarDeteccao
@@ -974,8 +1500,14 @@
             () => pararCamera(true)
         );
 
-        carregarDetector();
+
+        /*
+         * INICIALIZAÇÃO
+         */
+
+        carregarModelos();
 
     </script>
+
 </body>
 </html>
