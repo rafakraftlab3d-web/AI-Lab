@@ -8,7 +8,12 @@
         content="width=device-width, initial-scale=1.0, viewport-fit=cover"
     >
 
-    <title>AI-Lab Mobile</title>
+    <meta
+        http-equiv="Cache-Control"
+        content="no-cache, no-store, must-revalidate"
+    >
+
+    <title>AI-Lab Mobile V3</title>
 
     <style>
         * {
@@ -25,62 +30,78 @@
             padding:
                 max(16px, env(safe-area-inset-top))
                 14px
-                max(24px, env(safe-area-inset-bottom));
+                max(28px, env(safe-area-inset-bottom));
 
             background: #101114;
-            color: white;
+            color: #ffffff;
             font-family: Arial, Helvetica, sans-serif;
+        }
+
+        .app {
+            width: min(100%, 850px);
+            margin: 0 auto;
+        }
+
+        .cabecalho {
             text-align: center;
+            margin-bottom: 12px;
         }
 
         h1 {
-            margin: 4px 0 8px;
+            margin: 4px 0;
             font-size: 26px;
         }
 
+        .versao {
+            display: inline-block;
+            padding: 5px 10px;
+            border-radius: 999px;
+            background: #29303b;
+            color: #76c8ff;
+            font-size: 12px;
+            font-weight: bold;
+        }
+
         #status {
-            min-height: 42px;
-            margin: 0 0 12px;
+            min-height: 44px;
+            margin: 12px 0;
             color: #d8d8d8;
             font-size: 15px;
             line-height: 1.4;
-        }
-
-        .painel {
-            width: min(100%, 850px);
-            margin: 0 auto;
+            text-align: center;
         }
 
         .camera-box {
             position: relative;
             width: 100%;
             overflow: hidden;
-
-            border: 2px solid #444;
+            border: 2px solid #454950;
             border-radius: 16px;
-            background: black;
+            background: #000000;
         }
 
         video {
             display: block;
             width: 100%;
             height: auto;
-
-            /*
-             * Mantém a imagem real.
-             * Não espelha automaticamente a câmera frontal.
-             */
-            transform: scaleX(1);
+            background: #000000;
         }
 
         canvas {
             position: absolute;
             inset: 0;
-
+            display: block;
             width: 100%;
             height: 100%;
-
             pointer-events: none;
+        }
+
+        /*
+         * Espelha vídeo e desenhos simultaneamente.
+         * Usado apenas na câmera frontal.
+         */
+        .espelhado {
+            transform: scaleX(-1);
         }
 
         .informacoes {
@@ -91,21 +112,23 @@
         }
 
         .cartao {
-            padding: 10px;
-            border: 1px solid #333;
-            border-radius: 10px;
-            background: #191b20;
+            padding: 11px 8px;
+            border: 1px solid #32363e;
+            border-radius: 11px;
+            background: #191c21;
+            text-align: center;
         }
 
         .cartao strong {
             display: block;
-            margin-bottom: 4px;
+            margin-bottom: 5px;
             color: #8ae99f;
-            font-size: 13px;
+            font-size: 12px;
         }
 
         .cartao span {
             font-size: 16px;
+            font-weight: bold;
         }
 
         .botoes {
@@ -117,18 +140,20 @@
         }
 
         button {
-            min-width: 135px;
-            padding: 13px 16px;
-
+            min-width: 138px;
+            padding: 13px 15px;
             border: none;
             border-radius: 10px;
-
             color: #101114;
             font-size: 15px;
             font-weight: bold;
-
             cursor: pointer;
             touch-action: manipulation;
+        }
+
+        button:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
         }
 
         #iniciar {
@@ -154,16 +179,12 @@
             color: white;
         }
 
-        button:disabled {
-            opacity: 0.42;
-            cursor: not-allowed;
-        }
-
-        .legenda {
+        .rodape {
             margin-top: 14px;
-            color: #aaa;
+            color: #aeb3bc;
             font-size: 13px;
-            line-height: 1.4;
+            line-height: 1.45;
+            text-align: center;
         }
 
         @media (min-width: 700px) {
@@ -175,11 +196,15 @@
 </head>
 
 <body>
-    <main class="painel">
-        <h1>AI-Lab Mobile</h1>
+    <main class="app">
+
+        <header class="cabecalho">
+            <h1>AI-Lab Mobile</h1>
+            <span class="versao">VERSÃO 3 — DETECÇÃO FACIAL</span>
+        </header>
 
         <p id="status">
-            Carregando o detector facial...
+            Preparando o sistema de visão computacional...
         </p>
 
         <div class="camera-box">
@@ -194,6 +219,7 @@
         </div>
 
         <section class="informacoes">
+
             <div class="cartao">
                 <strong>CÂMERA</strong>
                 <span id="infoCamera">Desligada</span>
@@ -213,9 +239,11 @@
                 <strong>CONFIANÇA</strong>
                 <span id="infoConfianca">—</span>
             </div>
+
         </section>
 
         <div class="botoes">
+
             <button id="iniciar" disabled>
                 Iniciar câmera
             </button>
@@ -235,23 +263,31 @@
             <button id="parar" disabled>
                 Parar
             </button>
+
         </div>
 
-        <p class="legenda">
-            Retângulo verde: rosto detectado. Pontos amarelos:
-            olhos, nariz, boca e laterais da face.
+        <p class="rodape">
+            O retângulo verde indica o rosto detectado.
+            Os pontos amarelos representam referências faciais.
         </p>
+
     </main>
 
     <script type="module">
+
         import {
             FaceDetector,
             FilesetResolver
         } from "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@latest/vision_bundle.mjs";
 
-        const video = document.getElementById("video");
-        const canvas = document.getElementById("overlay");
-        const ctx = canvas.getContext("2d");
+        const video =
+            document.getElementById("video");
+
+        const canvas =
+            document.getElementById("overlay");
+
+        const contexto =
+            canvas.getContext("2d");
 
         const statusTexto =
             document.getElementById("status");
@@ -283,10 +319,10 @@
         const botaoParar =
             document.getElementById("parar");
 
-        let faceDetector = null;
+        let detectorFacial = null;
 
         let stream = null;
-        let videoTrack = null;
+        let faixaVideo = null;
 
         let cameraSelecionada = "environment";
 
@@ -294,62 +330,63 @@
         let deteccaoAtiva = true;
 
         let animacaoId = null;
-        let ultimoTempoDoVideo = -1;
-        let ultimaDeteccaoMs = 0;
+        let ultimoTempoVideo = -1;
+        let ultimaAnalise = 0;
 
-        /*
-         * Limita a análise a aproximadamente 15 vezes por segundo.
-         * Isso reduz aquecimento e consumo de bateria.
-         */
-        const INTERVALO_DETECCAO_MS = 66;
+        const INTERVALO_ANALISE = 80;
 
-        async function carregarDetectorFacial() {
+        async function carregarDetector() {
+
             try {
-                statusTexto.textContent =
-                    "Carregando arquivos da visão computacional...";
 
-                const vision =
+                statusTexto.textContent =
+                    "Baixando biblioteca de visão computacional...";
+
+                const arquivosVision =
                     await FilesetResolver.forVisionTasks(
                         "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@latest/wasm"
                     );
 
                 statusTexto.textContent =
-                    "Carregando modelo de detecção facial...";
+                    "Baixando modelo de detecção facial...";
 
-                faceDetector =
+                detectorFacial =
                     await FaceDetector.createFromOptions(
-                        vision,
+                        arquivosVision,
                         {
                             baseOptions: {
                                 modelAssetPath:
-                                    "https://storage.googleapis.com/mediapipe-models/face_detector/blaze_face_short_range/float16/1/blaze_face_short_range.tflite",
-                                delegate: "GPU"
+                                    "https://storage.googleapis.com/mediapipe-models/face_detector/blaze_face_short_range/float16/1/blaze_face_short_range.tflite"
                             },
 
                             runningMode: "VIDEO",
 
-                            minDetectionConfidence: 0.5,
+                            minDetectionConfidence: 0.45,
 
                             minSuppressionThreshold: 0.3
                         }
                     );
 
                 statusTexto.textContent =
-                    "Detector carregado. Pressione “Iniciar câmera”.";
+                    "Detector facial carregado. Pressione “Iniciar câmera”.";
 
                 botaoIniciar.disabled = false;
+
             } catch (erro) {
+
                 console.error(
-                    "Erro ao carregar o detector:",
+                    "Erro ao carregar MediaPipe:",
                     erro
                 );
 
                 statusTexto.textContent =
-                    "Erro ao carregar a IA. Atualize a página e tente novamente.";
+                    "Falha ao carregar o detector facial. Recarregue a página.";
+
             }
         }
 
         async function iniciarCamera() {
+
             pararCamera(false);
 
             statusTexto.textContent =
@@ -374,25 +411,26 @@
             };
 
             try {
+
                 stream =
                     await navigator.mediaDevices.getUserMedia(
                         configuracao
                     );
 
-                videoTrack =
+                faixaVideo =
                     stream.getVideoTracks()[0];
 
                 video.srcObject = stream;
 
                 await video.play();
 
-                /*
-                 * Garante imagem não espelhada nas duas câmeras.
-                 */
-                video.style.transform = "scaleX(1)";
+                canvas.width =
+                    video.videoWidth;
 
-                canvas.width = video.videoWidth;
-                canvas.height = video.videoHeight;
+                canvas.height =
+                    video.videoHeight;
+
+                configurarEspelhamento();
 
                 infoCamera.textContent =
                     cameraSelecionada === "environment"
@@ -410,40 +448,64 @@
                 botaoDetectar.disabled = false;
                 botaoParar.disabled = false;
 
-                configurarBotaoFlash();
+                configurarFlash();
 
                 statusTexto.textContent =
                     deteccaoAtiva
                         ? "Câmera ativa. Procurando rostos..."
                         : "Câmera ativa. Detecção pausada.";
 
-                ultimoTempoDoVideo = -1;
-                ultimaDeteccaoMs = 0;
+                ultimoTempoVideo = -1;
+                ultimaAnalise = 0;
 
-                executarLoop();
+                executarAnalise();
+
             } catch (erro) {
+
                 console.error(
-                    "Erro ao abrir a câmera:",
+                    "Erro ao abrir câmera:",
                     erro
                 );
 
                 statusTexto.textContent =
-                    "Não foi possível abrir a câmera. Verifique a permissão do navegador.";
+                    "Não foi possível abrir a câmera. Verifique a permissão do Safari.";
 
                 botaoIniciar.disabled = false;
+
             }
         }
 
-        function configurarBotaoFlash() {
+        function configurarEspelhamento() {
+
+            const usarEspelho =
+                cameraSelecionada === "user";
+
+            video.classList.toggle(
+                "espelhado",
+                usarEspelho
+            );
+
+            canvas.classList.toggle(
+                "espelhado",
+                usarEspelho
+            );
+        }
+
+        function configurarFlash() {
+
             flashLigado = false;
-            botaoFlash.textContent = "Ativar flash";
+
+            botaoFlash.textContent =
+                "Ativar flash";
 
             if (
                 cameraSelecionada !== "environment" ||
-                !videoTrack ||
-                typeof videoTrack.getCapabilities !== "function"
+                !faixaVideo ||
+                typeof faixaVideo.getCapabilities !== "function"
             ) {
+
                 botaoFlash.disabled = true;
+
                 botaoFlash.textContent =
                     cameraSelecionada === "user"
                         ? "Flash só na traseira"
@@ -453,52 +515,35 @@
             }
 
             const capacidades =
-                videoTrack.getCapabilities();
+                faixaVideo.getCapabilities();
 
             if (
-                "torch" in capacidades &&
                 capacidades.torch === true
             ) {
+
                 botaoFlash.disabled = false;
+
             } else {
+
                 botaoFlash.disabled = true;
+
                 botaoFlash.textContent =
                     "Flash indisponível";
             }
         }
 
         async function alternarFlash() {
-            if (!videoTrack) {
-                return;
-            }
 
-            if (
-                typeof videoTrack.getCapabilities !== "function" ||
-                typeof videoTrack.applyConstraints !== "function"
-            ) {
-                statusTexto.textContent =
-                    "O navegador não oferece controle do flash.";
-
-                return;
-            }
-
-            const capacidades =
-                videoTrack.getCapabilities();
-
-            if (
-                !("torch" in capacidades) ||
-                capacidades.torch !== true
-            ) {
-                statusTexto.textContent =
-                    "Flash indisponível nesta câmera.";
-
+            if (!faixaVideo) {
                 return;
             }
 
             try {
-                const novoEstado = !flashLigado;
 
-                await videoTrack.applyConstraints({
+                const novoEstado =
+                    !flashLigado;
+
+                await faixaVideo.applyConstraints({
                     advanced: [
                         {
                             torch: novoEstado
@@ -506,7 +551,8 @@
                     ]
                 });
 
-                flashLigado = novoEstado;
+                flashLigado =
+                    novoEstado;
 
                 botaoFlash.textContent =
                     flashLigado
@@ -517,9 +563,11 @@
                     flashLigado
                         ? "Flash ligado."
                         : "Flash desligado.";
+
             } catch (erro) {
+
                 console.error(
-                    "Erro ao controlar flash:",
+                    "Erro no flash:",
                     erro
                 );
 
@@ -530,75 +578,91 @@
 
                 statusTexto.textContent =
                     "Não foi possível controlar o flash.";
+
             }
         }
 
-        function executarLoop(tempoAtual = performance.now()) {
-            if (!stream || video.readyState < 2) {
+        function executarAnalise(
+            tempoAtual = performance.now()
+        ) {
+
+            if (
+                !stream ||
+                video.readyState < 2
+            ) {
+
                 animacaoId =
-                    requestAnimationFrame(executarLoop);
+                    requestAnimationFrame(
+                        executarAnalise
+                    );
 
                 return;
             }
 
-            limparOverlay();
+            limparCanvas();
 
             if (
                 deteccaoAtiva &&
-                faceDetector &&
-                video.currentTime !== ultimoTempoDoVideo &&
-                tempoAtual - ultimaDeteccaoMs >=
-                    INTERVALO_DETECCAO_MS
+                detectorFacial &&
+                video.currentTime !== ultimoTempoVideo &&
+                tempoAtual - ultimaAnalise >= INTERVALO_ANALISE
             ) {
+
                 try {
+
                     const resultado =
-                        faceDetector.detectForVideo(
+                        detectorFacial.detectForVideo(
                             video,
                             tempoAtual
                         );
 
-                    desenharDeteccoes(
+                    desenharResultado(
                         resultado.detections || []
                     );
 
-                    ultimoTempoDoVideo =
+                    ultimoTempoVideo =
                         video.currentTime;
 
-                    ultimaDeteccaoMs =
+                    ultimaAnalise =
                         tempoAtual;
+
                 } catch (erro) {
+
                     console.error(
-                        "Erro durante a detecção:",
+                        "Erro na detecção:",
                         erro
                     );
+
+                    statusTexto.textContent =
+                        `Erro durante a detecção: ${erro.message}`;
+
                 }
+
             } else if (!deteccaoAtiva) {
-                desenharMensagemOverlay(
+
+                desenharMensagem(
                     "Detecção pausada"
                 );
             }
 
             animacaoId =
-                requestAnimationFrame(executarLoop);
+                requestAnimationFrame(
+                    executarAnalise
+                );
         }
 
-        function limparOverlay() {
-            ctx.clearRect(
-                0,
-                0,
-                canvas.width,
-                canvas.height
-            );
-        }
+        function desenharResultado(
+            deteccoes
+        ) {
 
-        function desenharDeteccoes(deteccoes) {
             infoRostos.textContent =
                 String(deteccoes.length);
 
             if (deteccoes.length === 0) {
+
                 infoConfianca.textContent = "—";
 
-                desenharMensagemOverlay(
+                desenharMensagem(
                     "Nenhum rosto detectado"
                 );
 
@@ -607,11 +671,12 @@
 
             let maiorConfianca = 0;
 
-            for (const deteccao of deteccoes) {
-                const caixa = deteccao.boundingBox;
+            for (
+                const deteccao of deteccoes
+            ) {
 
                 const confianca =
-                    deteccao.categories?.[0]?.score ?? 0;
+                    deteccao.categories?.[0]?.score || 0;
 
                 maiorConfianca =
                     Math.max(
@@ -620,11 +685,11 @@
                     );
 
                 desenharCaixa(
-                    caixa,
+                    deteccao.boundingBox,
                     confianca
                 );
 
-                desenharPontosFaciais(
+                desenharPontos(
                     deteccao.keypoints || []
                 );
             }
@@ -638,76 +703,81 @@
                     : `${deteccoes.length} rostos detectados.`;
         }
 
-        function desenharCaixa(caixa, confianca) {
+        function desenharCaixa(
+            caixa,
+            confianca
+        ) {
+
             if (!caixa) {
                 return;
             }
 
-            const x = caixa.originX;
-            const y = caixa.originY;
-            const largura = caixa.width;
-            const altura = caixa.height;
+            contexto.strokeStyle =
+                "#35ff72";
 
-            ctx.strokeStyle = "#32ff72";
-            ctx.lineWidth = 5;
+            contexto.lineWidth = 5;
 
-            ctx.strokeRect(
-                x,
-                y,
-                largura,
-                altura
+            contexto.strokeRect(
+                caixa.originX,
+                caixa.originY,
+                caixa.width,
+                caixa.height
             );
 
             const texto =
                 `Rosto ${(confianca * 100).toFixed(1)}%`;
 
-            ctx.font =
-                "bold 24px Arial";
+            contexto.font =
+                "bold 25px Arial";
 
             const larguraTexto =
-                ctx.measureText(texto).width;
+                contexto.measureText(texto).width;
 
-            const alturaFundo = 36;
+            const alturaEtiqueta = 38;
 
-            const textoY =
+            const posicaoY =
                 Math.max(
-                    alturaFundo,
-                    y
+                    alturaEtiqueta,
+                    caixa.originY
                 );
 
-            ctx.fillStyle =
+            contexto.fillStyle =
                 "rgba(0, 0, 0, 0.72)";
 
-            ctx.fillRect(
-                x,
-                textoY - alturaFundo,
+            contexto.fillRect(
+                caixa.originX,
+                posicaoY - alturaEtiqueta,
                 larguraTexto + 18,
-                alturaFundo
+                alturaEtiqueta
             );
 
-            ctx.fillStyle = "#32ff72";
+            contexto.fillStyle =
+                "#35ff72";
 
-            ctx.fillText(
+            contexto.fillText(
                 texto,
-                x + 8,
-                textoY - 9
+                caixa.originX + 8,
+                posicaoY - 10
             );
         }
 
-        function desenharPontosFaciais(pontos) {
-            for (const ponto of pontos) {
-                /*
-                 * Os pontos vêm normalizados entre 0 e 1.
-                 */
+        function desenharPontos(
+            pontos
+        ) {
+
+            for (
+                const ponto of pontos
+            ) {
+
                 const x =
                     ponto.x * canvas.width;
 
                 const y =
                     ponto.y * canvas.height;
 
-                ctx.beginPath();
+                contexto.beginPath();
 
-                ctx.arc(
+                contexto.arc(
                     x,
                     y,
                     7,
@@ -715,47 +785,70 @@
                     Math.PI * 2
                 );
 
-                ctx.fillStyle = "#ffe600";
-                ctx.fill();
+                contexto.fillStyle =
+                    "#ffe600";
 
-                ctx.strokeStyle = "#111";
-                ctx.lineWidth = 2;
-                ctx.stroke();
+                contexto.fill();
+
+                contexto.strokeStyle =
+                    "#111111";
+
+                contexto.lineWidth = 2;
+
+                contexto.stroke();
             }
         }
 
-        function desenharMensagemOverlay(texto) {
-            ctx.font = "bold 23px Arial";
+        function desenharMensagem(
+            texto
+        ) {
+
+            contexto.font =
+                "bold 23px Arial";
 
             const larguraTexto =
-                ctx.measureText(texto).width;
+                contexto.measureText(texto).width;
 
             const x =
-                (canvas.width - larguraTexto) / 2;
+                Math.max(
+                    12,
+                    (canvas.width - larguraTexto) / 2
+                );
 
-            const y = 45;
-
-            ctx.fillStyle =
+            contexto.fillStyle =
                 "rgba(0, 0, 0, 0.65)";
 
-            ctx.fillRect(
+            contexto.fillRect(
                 x - 12,
-                12,
+                15,
                 larguraTexto + 24,
-                45
+                46
             );
 
-            ctx.fillStyle = "white";
+            contexto.fillStyle =
+                "#ffffff";
 
-            ctx.fillText(
+            contexto.fillText(
                 texto,
                 x,
-                y
+                47
+            );
+        }
+
+        function limparCanvas() {
+
+            contexto.clearRect(
+                0,
+                0,
+                canvas.width,
+                canvas.height
             );
         }
 
         function alternarDeteccao() {
-            deteccaoAtiva = !deteccaoAtiva;
+
+            deteccaoAtiva =
+                !deteccaoAtiva;
 
             botaoDetectar.textContent =
                 deteccaoAtiva
@@ -763,18 +856,23 @@
                     : "Detecção: OFF";
 
             if (!deteccaoAtiva) {
+
                 infoRostos.textContent = "0";
+
                 infoConfianca.textContent = "—";
 
                 statusTexto.textContent =
                     "Detecção facial pausada.";
+
             } else {
+
                 statusTexto.textContent =
                     "Detecção facial ativada.";
             }
         }
 
         async function trocarCamera() {
+
             cameraSelecionada =
                 cameraSelecionada === "environment"
                     ? "user"
@@ -786,12 +884,18 @@
         function pararCamera(
             atualizarStatus = true
         ) {
+
             if (animacaoId !== null) {
-                cancelAnimationFrame(animacaoId);
+
+                cancelAnimationFrame(
+                    animacaoId
+                );
+
                 animacaoId = null;
             }
 
             if (stream !== null) {
+
                 stream
                     .getTracks()
                     .forEach(
@@ -800,20 +904,35 @@
             }
 
             stream = null;
-            videoTrack = null;
+            faixaVideo = null;
             flashLigado = false;
 
             video.srcObject = null;
 
-            limparOverlay();
+            video.classList.remove(
+                "espelhado"
+            );
 
-            infoCamera.textContent = "Desligada";
-            infoResolucao.textContent = "—";
-            infoRostos.textContent = "0";
-            infoConfianca.textContent = "—";
+            canvas.classList.remove(
+                "espelhado"
+            );
+
+            limparCanvas();
+
+            infoCamera.textContent =
+                "Desligada";
+
+            infoResolucao.textContent =
+                "—";
+
+            infoRostos.textContent =
+                "0";
+
+            infoConfianca.textContent =
+                "—";
 
             botaoIniciar.disabled =
-                faceDetector === null;
+                detectorFacial === null;
 
             botaoTrocar.disabled = true;
             botaoFlash.disabled = true;
@@ -824,6 +943,7 @@
                 "Ativar flash";
 
             if (atualizarStatus) {
+
                 statusTexto.textContent =
                     "Câmera desligada.";
             }
@@ -854,7 +974,8 @@
             () => pararCamera(true)
         );
 
-        carregarDetectorFacial();
+        carregarDetector();
+
     </script>
 </body>
 </html>
